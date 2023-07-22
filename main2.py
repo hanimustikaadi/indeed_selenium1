@@ -2,6 +2,9 @@ import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import requests
+import os
+import json
+import pandas as pd
 
 """ Konsep :
 1. scraping indeed.com
@@ -21,8 +24,8 @@ https://id.indeed.com/jobs?q={input pekerjaan}&l={input lokasi}&start={input hal
 
 def driver():
     driver = webdriver.Chrome()
-    driver.set_page_load_timeout(200)
-    driver.implicitly_wait(120)
+    driver.set_page_load_timeout(20)
+    driver.implicitly_wait(20)
     return driver
 
 
@@ -98,7 +101,7 @@ def get_all_item(url):
         ).text.strip()
 
         # reformating data on dictionary
-        data_dict: dict = {
+        data_dict = {
             "job title": title,
             "company name": company_name,
             "company profile": company_link,
@@ -108,7 +111,40 @@ def get_all_item(url):
         # append to list
         job_list.append(data_dict)
 
-        print(data_dict)
+    return job_list
+def make_json(job_list):
+    # creating new directory
+    try:
+        os.mkdir('json_results')
+    except FileExistsError:
+         pass
+
+    filename = f'{pekerjaan}_in_{lokasi}_page_{halaman}.json'
+
+
+    #return job_list
+#def create_csv(job_list):
+
+
+    # creating dummy data
+    with open(f"json_results/{filename}", "w+") as outfile:
+        json.dump(job_list, outfile)
+
+    print('Data {} successfully generated in json_result directory'.format(filename))
+
+def make_csv(job_list):
+    try:
+        os.mkdir('data_results')
+    except FileExistsError:
+        pass
+    # create csv or excel file using pandas
+    df = pd.DataFrame(job_list)
+    #print(df)
+    df.to_csv("indeed_data.csv", index=False)
+    df.to_excel("indeed_data1.xlsx" , index=False)
+
+    filename = f'{pekerjaan}_in_{lokasi}_page_{halaman}.json'
+    print(f'{filename}.csv and {filename}.xlsx successfully writed in result directory')
 
 
 if __name__ == "__main__":
@@ -122,4 +158,7 @@ if __name__ == "__main__":
     target_url(url=url)
     time.sleep(120)
     get_total_pages(url)
-    get_all_item(url)
+    job_list = get_all_item(url)
+    make_json(job_list)
+    make_csv(job_list)
+    #create_csv(job_list)
